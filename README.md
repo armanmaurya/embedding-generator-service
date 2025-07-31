@@ -135,15 +135,6 @@ curl -X POST "http://127.0.0.1:8000/similarity" \
 3. **`models.py`**: Pydantic models for data validation
 4. **`config.py`**: Configuration management and validation
 
-### Key Features
-
-- **Modular Design**: Separated concerns for maintainability
-- **Environment Configuration**: All settings via environment variables
-- **Input Validation**: Pydantic models ensure data integrity
-- **Error Handling**: Comprehensive error handling and responses
-- **Documentation**: Auto-generated OpenAPI documentation
-- **Security**: API keys stored in environment variables
-
 ## ⚙️ Configuration
 
 All configuration is handled via environment variables in `.env`:
@@ -173,26 +164,6 @@ MAX_BATCH_SIZE=100
 - **Tokens per minute**: 30,000
 - **Requests per day**: 1,000
 - **Cost**: Free
-
-## 🔒 Security
-
-- API keys stored in `.env` (not committed to git)
-- Input validation on all endpoints
-- Error handling prevents information leakage
-- Rate limiting considerations for production
-
-## 🧪 Testing
-
-```bash
-# Test basic functionality
-python gen_test.py
-
-# Test API health
-curl http://127.0.0.1:8000/health
-
-# View interactive documentation
-# Open: http://127.0.0.1:8000/docs
-```
 
 ## 📦 Dependencies
 
