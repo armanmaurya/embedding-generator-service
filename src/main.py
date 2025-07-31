@@ -12,9 +12,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
 # Import our custom modules
-from config import config
-from embedding_service import EmbeddingService
-from models import (
+from .config import config
+from .embedding_service import EmbeddingService
+from .models import (
     EmbeddingRequest, EmbeddingResponse,
     BatchEmbeddingRequest, BatchEmbeddingResponse,
     SimilarityRequest, SimilarityResponse,

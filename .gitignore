@@ -25,4 +25,14 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+.tmp/
 

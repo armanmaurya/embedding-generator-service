@@ -1,0 +1,37 @@
+# Docker Compose for Embedding Generator API
+version: '3.8'
+
+services:
+  embedding-api:
+    build: .
+    container_name: embedding-generator
+    ports:
+      - "8000:8000"
+    environment:
+      # Override default settings for Docker
+      - HOST=0.0.0.0
+      - PORT=8000
+      - RELOAD=false
+    env_file:
+      - .env
+    volumes:
+      # Optional: Mount for development (uncomment for dev mode)
+      # - .:/app
+      - /app/__pycache__  # Exclude cache
+    restart: unless-stopped
+    networks:
+      - embedding-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  embedding-network:
+    driver: bridge
+
+# Optional: Add volume for persistent data if needed in future
+# volumes:
+#   embedding_data:

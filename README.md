@@ -50,12 +50,29 @@ GOOGLE_AI_API_KEY=your_actual_api_key_here
 
 ### 3. Run the Server
 
+#### Option A: Local Development
 ```bash
-# Option 1: Using the startup script
-python run_server.py
+# Using the startup script
+python src/run_server.py
 
-# Option 2: Using uvicorn directly
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+# Using uvicorn directly
+python -m uvicorn src.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+#### Option B: Docker (Recommended)
+```bash
+# Development environment with hot reload
+./deploy.sh dev          # Linux/Mac
+deploy.bat dev           # Windows
+
+# Production environment
+./deploy.sh prod         # Linux/Mac  
+deploy.bat prod          # Windows
+
+# Or using docker-compose directly
+docker-compose up -d                    # Basic setup
+docker-compose -f docker-compose.dev.yml up -d   # Development
+docker-compose -f docker-compose.prod.yml up -d  # Production
 ```
 
 ## 📚 API Endpoints
@@ -187,6 +204,45 @@ curl http://127.0.0.1:8000/health
 - `python-dotenv`: Environment variable management
 
 ## 🚀 Deployment
+
+### Docker Deployment (Recommended)
+
+#### Quick Start with Docker
+```bash
+# Clone and setup
+git clone https://github.com/your-username/gemini-embeddings-api
+cd gemini-embeddings-api
+cp .env.example .env
+# Edit .env with your API key
+
+# Run development environment
+./deploy.sh dev    # Linux/Mac
+deploy.bat dev     # Windows
+
+# Run production environment  
+./deploy.sh prod   # Linux/Mac
+deploy.bat prod    # Windows
+```
+
+#### Docker Commands
+```bash
+# Build images
+docker build -t embedding-generator .
+
+# Run container
+docker run -d --name embedding-api \
+  --env-file .env \
+  -p 8000:8000 \
+  embedding-generator
+
+# View logs
+docker logs embedding-api
+
+# Stop container
+docker stop embedding-api
+```
+
+### Production Deployment Considerations
 
 For production deployment, consider:
 

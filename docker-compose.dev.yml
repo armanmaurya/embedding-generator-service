@@ -1,0 +1,30 @@
+# Docker Compose for Development Environment
+version: '3.8'
+
+services:
+  embedding-api-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: embedding-generator-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - RELOAD=true  # Enable hot reload for development
+    env_file:
+      - .env
+    volumes:
+      # Mount source code for development
+      - .:/app
+      - /app/__pycache__
+      - /app/env
+    restart: unless-stopped
+    networks:
+      - embedding-dev-network
+    command: ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+networks:
+  embedding-dev-network:
+    driver: bridge

@@ -7,7 +7,7 @@ Copyright (c) 2025 Arman Maurya
 """
 
 import uvicorn
-from config import config
+from .config import config
 
 if __name__ == "__main__":
     print(f"Starting {config.app_name} v{config.app_version}")
