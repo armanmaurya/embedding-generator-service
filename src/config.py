@@ -36,10 +36,11 @@ class Config:
         # Embedding Configuration
         self.default_model = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
         self.default_dimensions = int(os.getenv("DEFAULT_DIMENSIONS", "768"))
-        self.max_batch_size = int(os.getenv("MAX_BATCH_SIZE", "100"))
         
         # Rate Limiting (for future implementation)
         self.rate_limit_per_minute = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
+
+        self.save_embedding_api_endpoint = os.getenv("SAVE_EMBEDDING_API_ENDPOINT")
         
     def _get_required_env(self, key: str) -> str:
         """Get required environment variable or raise error if not found."""
@@ -62,10 +63,6 @@ class Config:
             # Validate port
             if not 1 <= self.port <= 65535:
                 raise ValueError("Port must be between 1 and 65535")
-            
-            # Validate batch size
-            if not 1 <= self.max_batch_size <= 1000:
-                raise ValueError("Max batch size must be between 1 and 1000")
             
             return True
             
