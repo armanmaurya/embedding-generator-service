@@ -10,6 +10,17 @@ Copyright (c) 2025 Arman Maurya
 from typing import List
 from pydantic import BaseModel, Field
 
+class ArticleEmbeddingRequest(BaseModel):
+    """Request model for article embedding generation."""
+    article_id: str = Field(..., description="Unique identifier for the article")
+    text: str = Field(..., description="The text content of the article", min_length=1)
+    normalize: bool = Field(True, description="Whether to normalize the embedding vector")
+    dimensions: int = Field(768, description="Output embedding dimensions", ge=128, le=3072)
+
+class ArticleEmbeddingResponse(BaseModel):
+    """Response model for article embedding generation."""
+    status: str = Field(..., description="Status of the embedding generation")
+    article_id: str = Field(..., description="Unique identifier for the article")
 
 class EmbeddingRequest(BaseModel):
     """Request model for single embedding generation."""

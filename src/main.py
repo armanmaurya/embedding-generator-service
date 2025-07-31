@@ -10,18 +10,25 @@ Copyright (c) 2025 Arman Maurya
 from typing import Union
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+import requests as http_requests
 
 # Import our custom modules
 from .config import config
 from .embedding_service import EmbeddingService
 from .models import (
-    EmbeddingRequest, EmbeddingResponse,
-    HealthResponse, ErrorResponse
+    ArticleEmbeddingRequest,
+    ArticleEmbeddingResponse,
+    EmbeddingRequest,
+    EmbeddingResponse,
+    HealthResponse,
+    ErrorResponse,
 )
 
 # Validate configuration
 if not config.validate():
-    raise RuntimeError("Invalid configuration. Please check your environment variables.")
+    raise RuntimeError(
+        "Invalid configuration. Please check your environment variables."
+    )
 
 # Initialize FastAPI app with config
 app = FastAPI(**config.get_fastapi_config())
@@ -35,7 +42,10 @@ async def general_exception_handler(request, exc):
     """Global exception handler for unhandled errors."""
     return JSONResponse(
         status_code=500,
-        content={"detail": f"Internal server error: {str(exc)}", "error_type": "InternalServerError"}
+        content={
+            "detail": f"Internal server error: {str(exc)}",
+            "error_type": "InternalServerError",
+        },
     )
 
 
@@ -48,10 +58,10 @@ def read_root():
         "endpoints": {
             "/embed": "Generate single embedding",
             "/health": "Health check",
-            "/docs": "API documentation"
+            "/docs": "API documentation",
         },
         "model": config.default_model,
-        "default_dimensions": config.default_dimensions
+        "default_dimensions": config.default_dimensions,
     }
 
 
@@ -59,9 +69,7 @@ def read_root():
 def health_check():
     """Health check endpoint."""
     return HealthResponse(
-        status="healthy",
-        model=config.default_model,
-        version=config.app_version
+        status="healthy", model=config.default_model, version=config.app_version
     )
 
 
@@ -69,7 +77,7 @@ def health_check():
 def generate_embedding(request: EmbeddingRequest):
     """
     Generate a 768-dimensional embedding for a single text input.
-    
+
     - **text**: The text to generate embeddings for
     - **normalize**: Whether to normalize the embedding (recommended for similarity tasks)
     - **dimensions**: Output embedding dimensions (128-3072, default: 768)
@@ -78,15 +86,53 @@ def generate_embedding(request: EmbeddingRequest):
         result = embedding_service.generate_single_embedding(
             text=request.text,
             normalize=request.normalize,
-            dimensions=request.dimensions
+            dimensions=request.dimensions,
         )
-        
         return EmbeddingResponse(**result)
-    
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate embedding: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate embedding: {str(e)}"
+        )
+
+@app.post("/article/embed", response_model=ArticleEmbeddingResponse)
+def generate_article_embedding(request: ArticleEmbeddingRequest):
+    """
+    Generate embedding for an article.
+
+    - **article_id**: Unique identifier for the article
+    - **text**: The text content of the article
+    - **normalize**: Whether to normalize the embedding vector
+    - **dimensions**: Output embedding dimensions (128-3072, default: 768)
+    """
+    try:
+        result = embedding_service.generate_single_embedding(
+            text=request.text,
+            normalize=request.normalize,
+            dimensions=request.dimensions,
+        )
+        response = http_requests.post(
+            config.save_embedding_api_endpoint,
+            json={
+                "article_id": request.article_id,
+                "embedding": result["embedding"],
+                "dimension": result["dimension"],
+                "normalized": result["normalized"],
+                "model": result["model"],
+            },
+        )
+        if response.status_code != 200:
+            raise Exception(f"Failed to save embedding: {response.text}")
+        return ArticleEmbeddingResponse(status="success", article_id=request.article_id)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate article embedding: {str(e)}"
+        )
 
 
 # Keep the old endpoint for backward compatibility
@@ -94,4 +140,3 @@ def generate_embedding(request: EmbeddingRequest):
 def read_item(item_id: int, q: Union[str, None] = None):
     """Legacy endpoint for backward compatibility."""
     return {"item_id": item_id, "q": q}
-
