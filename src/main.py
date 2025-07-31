@@ -57,6 +57,7 @@ def read_root():
         "version": config.app_version,
         "endpoints": {
             "/embed": "Generate single embedding",
+            "/article/embed": "Generate embedding for an article and save",
             "/health": "Health check",
             "/docs": "API documentation",
         },
