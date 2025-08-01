@@ -1,5 +1,6 @@
 # Multi-stage Docker build for production
 FROM python:3.12-slim as builder
+LABEL org.opencontainers.image.source="https://github.com/armanmaurya/embedding-generator-service"
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -27,6 +28,7 @@ RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Production stage
 FROM python:3.12-slim as production
+LABEL org.opencontainers.image.source="https://github.com/armanmaurya/embedding-generator-service"
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

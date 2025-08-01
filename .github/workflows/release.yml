@@ -39,77 +39,58 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Configure package visibility
+    - name: Build and push to GHCR
+      id: build
       run: |
-        echo "Logging in to GHCR with actor: ${{ github.actor }}"
-        echo "Repository: ${{ github.repository }}"
-        echo "Image will be: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-
-    - name: Extract version from tag
-      id: version
-      run: |
+        # Extract version
         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           VERSION="${{ github.event.inputs.version }}"
         else
           VERSION=${GITHUB_REF#refs/tags/}
         fi
+        
+        # Build the image
+        docker build -f Dockerfile.prod -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION} .
+        docker build -f Dockerfile.prod -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+        
+        # Push the images
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        
+        # Set outputs
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
         echo "MAJOR_MINOR=${VERSION%.*}" >> $GITHUB_OUTPUT
         echo "MAJOR=${VERSION%%.*}" >> $GITHUB_OUTPUT
-
-    - name: Extract metadata for release
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=raw,value=${{ steps.version.outputs.VERSION }}
-          type=raw,value=${{ steps.version.outputs.MAJOR_MINOR }}
-          type=raw,value=${{ steps.version.outputs.MAJOR }}
-          type=raw,value=latest
-          type=raw,value=stable
-
-    - name: Build and push release image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile.prod
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: linux/amd64
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        tag_name: ${{ steps.version.outputs.VERSION }}
-        name: Release ${{ steps.version.outputs.VERSION }}
+        tag_name: ${{ steps.build.outputs.VERSION }}
+        name: Release ${{ steps.build.outputs.VERSION }}
         body: |
-          ## 🚀 Release ${{ steps.version.outputs.VERSION }}
+          ## 🚀 Release ${{ steps.build.outputs.VERSION }}
           
           ### Docker Images
-          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}`
-          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.MAJOR_MINOR }}`
-          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.MAJOR }}`
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.VERSION }}`
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.MAJOR_MINOR }}`
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.MAJOR }}`
           - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
           - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable`
           
           ### Usage
           ```bash
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.VERSION }}
           ```
         draft: false
         prerelease: false
 
     - name: Release notification
       run: |
-        echo "🎉 Release ${{ steps.version.outputs.VERSION }} created successfully!"
+        echo "🎉 Release ${{ steps.build.outputs.VERSION }} created successfully!"
         echo "📦 Docker images:"
-        echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}"
-        echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.MAJOR_MINOR }}"
-        echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.MAJOR }}"
+        echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.VERSION }}"
+        echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.MAJOR_MINOR }}"
+        echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build.outputs.MAJOR }}"
         echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
         echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable"
