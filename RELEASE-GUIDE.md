@@ -41,9 +41,21 @@ When you push a tag like `v1.2.3`, you get these images:
 docker run -d -p 8000:8000 ghcr.io/armanmaurya/embedding-generator-service:v1.2.3
 ```
 
+### Deploy with Environment Variables
+```bash
+# Using .env file (recommended)
+docker run -d -p 8000:8000 --env-file .env ghcr.io/armanmaurya/embedding-generator-service:v1.2.3
+
+# Or pass individual environment variables
+docker run -d -p 8000:8000 \
+  -e GOOGLE_AI_API_KEY=your_api_key \
+  -e EMBEDDING_MODEL=gemini-embedding-001 \
+  ghcr.io/armanmaurya/embedding-generator-service:v1.2.3
+```
+
 ### Deploy Latest Stable
 ```bash
-docker run -d -p 8000:8000 ghcr.io/armanmaurya/embedding-generator-service:stable
+docker run -d -p 8000:8000 --env-file .env ghcr.io/armanmaurya/embedding-generator-service:stable
 ```
 
 ### Update Docker Compose
@@ -51,12 +63,43 @@ docker run -d -p 8000:8000 ghcr.io/armanmaurya/embedding-generator-service:stabl
 services:
   embedding-api:
     image: ghcr.io/armanmaurya/embedding-generator-service:v1.2.3
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
 ```
 
 ## 📋 Current Status
 
-- **Current Version**: `1.0.1` (from VERSION file)
+- **Current Version**: `1.0.4` (from VERSION file)
 - **Workflow**: `.github/workflows/release.yml`
 - **Registry**: `ghcr.io/armanmaurya/embedding-generator-service`
+
+## 🔧 Environment Configuration
+
+The service requires environment variables for proper operation. Create a `.env` file with:
+
+```properties
+# Google AI API Configuration
+GOOGLE_AI_API_KEY=your_google_ai_api_key
+
+# FastAPI Configuration
+APP_NAME=Embedding Generator API
+APP_DESCRIPTION=Generate 768-dimensional embeddings using Googles Gemini model
+APP_VERSION=1.0.0
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+RELOAD=false
+
+# Embedding Configuration
+EMBEDDING_MODEL=gemini-embedding-001
+DEFAULT_DIMENSIONS=768
+MAX_BATCH_SIZE=100
+
+# Rate Limiting
+RATE_LIMIT_PER_MINUTE=100
+```
 
 **Ready to create your first tag-based release!** 🎉
