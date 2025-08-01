@@ -7,7 +7,7 @@ MIT License
 Copyright (c) 2025 Arman Maurya
 """
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class ArticleEmbeddingRequest(BaseModel):
@@ -16,6 +16,12 @@ class ArticleEmbeddingRequest(BaseModel):
     text: str = Field(..., description="The text content of the article", min_length=1)
     normalize: bool = Field(True, description="Whether to normalize the embedding vector")
     dimensions: int = Field(768, description="Output embedding dimensions", ge=128, le=3072)
+
+class CloudTasksPayload(BaseModel):
+    """Request model for Google Cloud Tasks payload."""
+    task_type: str = Field(..., description="Type of task")
+    timestamp: str = Field(..., description="Timestamp of task creation")
+    article_embedding_request: ArticleEmbeddingRequest = Field(..., description="Article embedding request data")
 
 class ArticleEmbeddingResponse(BaseModel):
     """Response model for article embedding generation."""
